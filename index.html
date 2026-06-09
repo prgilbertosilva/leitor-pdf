@@ -186,7 +186,7 @@
       max-height: none;
       min-height: 100dvh;
       border: 0;
-      padding: clamp(18px, 4vw, 64px);
+      padding: clamp(12px, 3vw, 48px) clamp(18px, 4vw, 64px) clamp(18px, 4vw, 64px);
     }
 
     .reader:fullscreen {
@@ -264,8 +264,9 @@
       top: 0;
       z-index: 2;
       justify-content: flex-end;
-      margin: -6px 0 12px;
-      padding: 6px 0;
+      width: 100%;
+      margin: 0 0 18px;
+      padding: 8px 0 10px;
       background: var(--panel);
     }
 
@@ -1157,7 +1158,7 @@
         await document.exitFullscreen();
       }
       document.body.classList.remove('reader-fullscreen');
-      setReadingOnly(false);
+      setReadingOnly(true, { render: false });
     }
 
     exitFullscreenButton.addEventListener('click', exitReaderFullscreen);
@@ -1238,5 +1239,6 @@
   </script>
 </body>
 </html>
+
 
 
