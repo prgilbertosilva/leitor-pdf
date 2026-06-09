@@ -611,6 +611,10 @@
         voices.find((voice) => `${voice.name} (${voice.lang})` === value);
     }
 
+    function isPtBrVoice(voice) {
+      return (voice.lang || '').toLowerCase().startsWith('pt-br');
+    }
+
     function isPortugueseVoice(voice) {
       return (voice.lang || '').toLowerCase().startsWith('pt');
     }
@@ -1019,19 +1023,22 @@
         voices.find((voice) => PREFERRED_VOICE_RE.test(`${voice.name} ${voice.voiceURI}`)) ||
         voices[0];
 
-      const portugueseVoices = voices.filter(isPortugueseVoice);
-      const naturalVoices = voices.filter((voice) => !isPortugueseVoice(voice) && isMicrosoftNaturalVoice(voice));
-      const otherVoices = voices.filter((voice) => !isPortugueseVoice(voice) && !isMicrosoftNaturalVoice(voice));
+      const ptBrVoices = voices.filter(isPtBrVoice);
+      const portugueseOtherVoices = voices.filter((voice) => isPortugueseVoice(voice) && !isPtBrVoice(voice));
+      const fallbackVoices = voices.filter((voice) => !isPortugueseVoice(voice) && isMicrosoftNaturalVoice(voice));
+      const shouldShowFallback = !ptBrVoices.length && !portugueseOtherVoices.length;
 
       voiceSelect.innerHTML =
-        renderVoiceGroup('Português', portugueseVoices) +
-        renderVoiceGroup('Microsoft Natural / Online', naturalVoices) +
-        renderVoiceGroup('Outras vozes', otherVoices);
+        renderVoiceGroup('Português do Brasil', ptBrVoices) +
+        renderVoiceGroup('Português', portugueseOtherVoices) +
+        (shouldShowFallback ? renderVoiceGroup('Outras vozes disponíveis', fallbackVoices) : '');
 
       if (preferred) {
         voiceSelect.value = getVoiceId(preferred);
+        if (!voiceSelect.value && ptBrVoices[0]) voiceSelect.value = getVoiceId(ptBrVoices[0]);
+        if (!voiceSelect.value && portugueseOtherVoices[0]) voiceSelect.value = getVoiceId(portugueseOtherVoices[0]);
         setVoiceControlsEnabled(true);
-        if (announce) updateStatus(`${voices.length} voz(es) disponíveis`);
+        if (announce) updateStatus(`${ptBrVoices.length} voz(es) PT-BR, ${portugueseOtherVoices.length} voz(es) em português`);
       } else {
         voiceSelect.innerHTML = '<option value="">Nenhuma voz encontrada</option>';
         setVoiceControlsEnabled(true);
@@ -1239,6 +1246,7 @@
   </script>
 </body>
 </html>
+
 
 
 
