@@ -258,19 +258,45 @@
       font-size: 18px;
     }
 
+    .reader-toolbar {
+      display: none;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      justify-content: flex-end;
+      margin: -6px 0 12px;
+      padding: 6px 0;
+      background: var(--panel);
+    }
+
+    body.reader-fullscreen .reader-toolbar,
+    .reader:fullscreen .reader-toolbar {
+      display: flex;
+    }
+
     .reader-text {
       display: grid;
+      width: 100%;
+      max-width: min(980px, 100%);
+      min-width: 0;
       gap: 12px;
       line-height: 1.68;
-      max-width: 980px;
       margin: 0 auto;
+      overflow-wrap: anywhere;
+      word-break: normal;
     }
 
     .paragraph {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
       margin: 0;
       border-left: 4px solid transparent;
       border-radius: 6px;
       padding: 6px 8px;
+      overflow-wrap: anywhere;
+      word-break: normal;
+      white-space: normal;
     }
 
     .paragraph.active {
@@ -339,7 +365,8 @@
       }
 
       .topbar {
-        position: static;
+        position: sticky;
+        top: 0;
         gap: 10px;
       }
 
@@ -372,8 +399,12 @@
       }
 
       .reader-text {
-        max-width: none;
+        max-width: 100%;
         line-height: 1.6;
+      }
+
+      .paragraph {
+        padding: 6px 4px;
       }
     }
 
@@ -471,6 +502,9 @@
       </div>
 
       <aside class="reader" id="readerPanel">
+        <div class="reader-toolbar">
+          <button class="icon-button" id="exitFullscreenButton" title="Voltar ao menu" aria-label="Voltar ao menu" type="button">↩</button>
+        </div>
         <h2>Modo leitura</h2>
         <div id="readerText" class="reader-text">
           <p class="notice">O texto extraído do PDF aparecerá aqui.</p>
@@ -503,6 +537,7 @@
     const fitButton = document.querySelector('#fitButton');
     const togglePdfButton = document.querySelector('#togglePdfButton');
     const fullscreenReaderButton = document.querySelector('#fullscreenReaderButton');
+    const exitFullscreenButton = document.querySelector('#exitFullscreenButton');
     const extractTextButton = document.querySelector('#extractTextButton');
     const refreshVoicesButton = document.querySelector('#refreshVoicesButton');
     const bookmarkButton = document.querySelector('#bookmarkButton');
@@ -624,8 +659,15 @@
       statusEl.textContent = message;
     }
 
+    function getAdjustedReaderFontSize() {
+      const requested = Number(fontSize.value);
+      const width = Math.max(320, window.innerWidth || 320);
+      const mobileLimit = Math.max(18, Math.min(28, Math.floor(width / 15)));
+      return window.matchMedia('(max-width: 760px)').matches ? Math.min(requested, mobileLimit) : requested;
+    }
+
     function setReaderSize() {
-      readerText.style.fontSize = `${fontSize.value}px`;
+      readerText.style.fontSize = `${getAdjustedReaderFontSize()}px`;
       saveProgress();
     }
 
@@ -1110,6 +1152,16 @@
       }
     });
 
+    async function exitReaderFullscreen() {
+      if (document.fullscreenElement && document.exitFullscreen) {
+        await document.exitFullscreen();
+      }
+      document.body.classList.remove('reader-fullscreen');
+      setReadingOnly(false);
+    }
+
+    exitFullscreenButton.addEventListener('click', exitReaderFullscreen);
+
     document.addEventListener('fullscreenchange', () => {
       if (!document.fullscreenElement) {
         document.body.classList.remove('reader-fullscreen');
@@ -1140,6 +1192,7 @@
     nextPage.addEventListener('click', () => renderPage(currentPage + 1));
     pageNumber.addEventListener('change', () => renderPage(Number(pageNumber.value) || 1));
     window.addEventListener('resize', () => {
+      setReaderSize();
       if (!pdfHidden) renderPage(currentPage, true);
     });
     window.addEventListener('beforeunload', () => {
@@ -1185,4 +1238,5 @@
   </script>
 </body>
 </html>
+
 
